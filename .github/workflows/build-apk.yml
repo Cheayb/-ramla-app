@@ -1,0 +1,90 @@
+name: Build Forme Sand APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Install Android SDK 34
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: |
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Setup Capacitor 6 & Sync
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: |
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          cat << 'EOF' > capacitor.config.json
+          {
+            "appId": "ma.cheayb.forme.sand",
+            "appName": "حساب الرملة للفورمة",
+            "webDir": "www",
+            "server": {
+              "androidScheme": "http"
+            }
+          }
+          EOF
+          npx cap add android
+          npx cap sync android
+          ls -la android/app/src/main/assets/public
+
+      - name: Set App Icons
+        run: |
+          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+          for dir in android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
+            mkdir -p "$dir"
+            cp -f www/icon-192.png "$dir/ic_launcher.png"
+            cp -f www/icon-192.png "$dir/ic_launcher_round.png"
+            cp -f www/icon-512.png "$dir/ic_launcher_foreground.png"
+          done
+
+      - name: Fix Kotlin stdlib
+        run: |
+          cat << 'EOF' >> android/app/build.gradle
+
+          configurations.all {
+            resolutionStrategy {
+              force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+              force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+              force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+            }
+          }
+          EOF
+
+      - name: Build Debug APK
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: forme-sand-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
