@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#14304a" />
+  <title>حساب الرملة للفورمة</title>
+  <style>
+    :root {
+      --bg: #f3f0e8;
+      --card: #ffffff;
+      --ink: #13293d;
+      --muted: #5c6b7a;
+      --primary: #14304a;
+      --primary-2: #1f4e78;
+      --accent: #c86d19;
+      --accent-soft: #fdf2e6;
+      --ok: #1b6e46;
+      --ok-soft: #eaf6ef;
+      --border: #dfd8ca;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .app {
+      max-width: 660px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: #fff;
+      padding: 18px;
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+    }
+
+    .header h1 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+
+    .header p {
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-calc {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-reset {
+      background: #eceff3;
+      color: var(--ink);
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .results {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fcfbf8;
+    }
+
+    .box.highlight {
+      background: var(--accent-soft);
+      border-color: #efc99e;
+    }
+
+    .box.ok {
+      background: var(--ok-soft);
+      border-color: #b7dec8;
+    }
+
+    .box-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .box-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>حساب الرملة للفورمة</h1>
+      <p>حساب المساحة، حجم الفورمة، كمية الرملة والتكلفة التقديرية</p>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <div class="field">
+          <label for="length">الطول (متر)</label>
+          <input id="length" type="number" step="0.01" min="0" placeholder="مثلاً: 6" />
+        </div>
+
+        <div class="field">
+          <label for="width">العرض (متر)</label>
+          <input id="width" type="number" step="0.01" min="0" placeholder="مثلاً: 4" />
+        </div>
+
+        <div class="field">
+          <label for="thickness">السمك (سنتيمتر)</label>
+          <input id="thickness" type="number" step="0.5" min="0" placeholder="مثلاً: 7" />
+        </div>
+
+        <div class="field">
+          <label for="waste">نسبة الزيادة (%)</label>
+          <select id="waste">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="10" selected>10%</option>
+            <option value="15">15%</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ratio">معامل الرملة (الافتراضي 0.85)</label>
+          <input id="ratio" type="number" step="0.01" min="0.1" max="2" value="0.85" />
+        </div>
+
+        <div class="field">
+          <label for="price">ثمن m³ رملة (اختياري)</label>
+          <input id="price" type="number" step="1" min="0" placeholder="مثلاً: 180" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-calc" id="calcBtn">احسب</button>
+        <button type="button" class="btn-reset" id="resetBtn">مسح</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="results">
+        <div class="box">
+          <div class="box-label">المساحة</div>
+          <div class="box-val" id="areaOut">0.00 m²</div>
+        </div>
+
+        <div class="box">
+          <div class="box-label">حجم الفورمة</div>
+          <div class="box-val" id="volOut">0.000 m³</div>
+        </div>
+
+        <div class="box highlight">
+          <div class="box-label">كمية الرملة المطلوبة</div>
+          <div class="box-val" id="sandOut">0.000 m³</div>
+        </div>
+
+        <div class="box ok">
+          <div class="box-label">التكلفة التقديرية</div>
+          <div class="box-val" id="costOut">0.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var lengthEl = document.getElementById("length");
+      var widthEl = document.getElementById("width");
+      var thicknessEl = document.getElementById("thickness");
+      var wasteEl = document.getElementById("waste");
+      var ratioEl = document.getElementById("ratio");
+      var priceEl = document.getElementById("price");
+
+      var areaOut = document.getElementById("areaOut");
+      var volOut = document.getElementById("volOut");
+      var sandOut = document.getElementById("sandOut");
+      var costOut = document.getElementById("costOut");
+
+      function calc() {
+        var l = parseFloat(lengthEl.value) || 0;
+        var w = parseFloat(widthEl.value) || 0;
+        var t = parseFloat(thicknessEl.value) || 0;
+        var waste = parseFloat(wasteEl.value) || 0;
+        var ratio = parseFloat(ratioEl.value) || 0;
+        var price = parseFloat(priceEl.value) || 0;
+
+        var area = l * w;
+        var vol = area * (t / 100);
+        var sand = vol * ratio * (1 + waste / 100);
+        var cost = sand * price;
+
+        areaOut.textContent = area.toFixed(2) + " m²";
+        volOut.textContent = vol.toFixed(3) + " m³";
+        sandOut.textContent = sand.toFixed(3) + " m³";
+        costOut.textContent = cost.toFixed(2);
+      }
+
+      [lengthEl, widthEl, thicknessEl, wasteEl, ratioEl, priceEl].forEach(function (el) {
+        el.addEventListener("input", calc);
+        el.addEventListener("change", calc);
+      });
+
+      document.getElementById("calcBtn").addEventListener("click", calc);
+      document.getElementById("resetBtn").addEventListener("click", function () {
+        lengthEl.value = "";
+        widthEl.value = "";
+        thicknessEl.value = "";
+        priceEl.value = "";
+        wasteEl.value = "10";
+        ratioEl.value = "0.85";
+        calc();
+      });
+
+      calc();
+    })();
+  </script>
+</body>
+</html>
